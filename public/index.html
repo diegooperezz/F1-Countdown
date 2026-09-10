@@ -43,15 +43,16 @@
       <button id="btn-rename" class="btn-chip">✏️ <span id="my-name-label"></span></button>
     </div>
 
-    <h2 class="section-title">Jugadores en la sala</h2>
+    <h2 class="section-title">Jugadores en la sala (<span id="room-capacity">0/15</span>)</h2>
     <ul id="player-list" class="player-list"></ul>
 
     <div class="lobby-actions">
       <button id="btn-start" class="btn btn-primary btn-big">🚦 Iniciar ronda</button>
+      <p id="start-hint" class="hint" hidden>👑 Esperando a que el admin de la sala inicie la ronda…</p>
       <button id="btn-reset" class="btn btn-ghost">Reiniciar marcador</button>
     </div>
 
-    <p class="hint">Comparte el enlace o el código de sala con tus amigos para que se unan desde sus ordenadores. Cualquiera puede pulsar "Iniciar ronda".</p>
+    <p class="hint">Comparte el enlace o el código de sala con tus amigos para que se unan desde sus ordenadores (máximo 15 jugadores). Solo el 👑 admin de la sala puede iniciar la ronda.</p>
 
     <div id="feed" class="feed"></div>
   </section>
@@ -83,6 +84,7 @@
 
       <div class="results-actions">
         <button id="btn-again" class="btn btn-primary btn-big">🚦 Otra ronda</button>
+        <p id="again-hint" class="hint" hidden>👑 Esperando a que el admin de la sala inicie otra ronda…</p>
       </div>
 
       <h3 class="section-title">Marcador general</h3>
