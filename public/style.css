@@ -181,6 +181,8 @@ kbd {
 
 .lobby-actions { margin-top: 22px; }
 
+.lobby-actions .hint, .results-actions .hint { text-align: center; margin-top: 10px; margin-bottom: 0; }
+
 .hint { color: var(--text-dim); font-size: 0.85rem; margin-top: 14px; line-height: 1.5; }
 
 .feed { margin-top: 18px; display: flex; flex-direction: column; gap: 6px; }
