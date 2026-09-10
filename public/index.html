@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Pulsador F1 — La Porra del Espacio</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚦</text></svg>">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- PANTALLA: Entrar -->
+  <section id="screen-join" class="screen active">
+    <div class="join-card">
+      <h1><span class="lights">🔴🔴🔴🔴🔴</span></h1>
+      <h1 class="title">PULSADOR F1</h1>
+      <p class="subtitle">El primero en pulsar <kbd>ESPACIO</kbd> cuando se apaguen las luces, gana. Salir antes = salida nula.</p>
+
+      <label class="field">
+        <span>Tu nombre</span>
+        <input id="input-name" type="text" maxlength="24" placeholder="Ej: Diego" autocomplete="off" />
+      </label>
+
+      <label class="field">
+        <span>Código de sala <em>(déjalo vacío para crear una nueva)</em></span>
+        <input id="input-code" type="text" maxlength="4" placeholder="Ej: R4C3" autocomplete="off" style="text-transform:uppercase" />
+      </label>
+
+      <button id="btn-join" class="btn btn-primary btn-big">Entrar a la sala</button>
+      <p id="join-error" class="error-text" hidden></p>
+    </div>
+  </section>
+
+  <!-- PANTALLA: Lobby -->
+  <section id="screen-lobby" class="screen">
+    <div class="topbar">
+      <div class="room-badge">
+        Sala <strong id="room-code-label">----</strong>
+        <button id="btn-copy-link" class="btn-chip" title="Copiar enlace para invitar">🔗 Copiar enlace</button>
+      </div>
+      <button id="btn-rename" class="btn-chip">✏️ <span id="my-name-label"></span></button>
+    </div>
+
+    <h2 class="section-title">Jugadores en la sala</h2>
+    <ul id="player-list" class="player-list"></ul>
+
+    <div class="lobby-actions">
+      <button id="btn-start" class="btn btn-primary btn-big">🚦 Iniciar ronda</button>
+      <button id="btn-reset" class="btn btn-ghost">Reiniciar marcador</button>
+    </div>
+
+    <p class="hint">Comparte el enlace o el código de sala con tus amigos para que se unan desde sus ordenadores. Cualquiera puede pulsar "Iniciar ronda".</p>
+
+    <div id="feed" class="feed"></div>
+  </section>
+
+  <!-- PANTALLA: Carrera (semaforo) -->
+  <section id="screen-race" class="screen">
+    <div class="race-wrap">
+      <div id="semaphore" class="semaphore">
+        <div class="bulb" data-i="1"></div>
+        <div class="bulb" data-i="2"></div>
+        <div class="bulb" data-i="3"></div>
+        <div class="bulb" data-i="4"></div>
+        <div class="bulb" data-i="5"></div>
+      </div>
+      <p id="race-status" class="race-status">Prepárate…</p>
+      <p class="race-hint">Pulsa <kbd>ESPACIO</kbd> en cuanto se apaguen las luces</p>
+      <button id="btn-space" class="btn-space">ESPACIO</button>
+      <div id="race-feed" class="race-feed"></div>
+    </div>
+  </section>
+
+  <!-- PANTALLA: Resultados -->
+  <section id="screen-results" class="screen">
+    <div class="results-wrap">
+      <h2 id="champion-banner" class="champion-banner"></h2>
+
+      <ol id="podium" class="podium"></ol>
+      <div id="incidents" class="incidents"></div>
+
+      <div class="results-actions">
+        <button id="btn-again" class="btn btn-primary btn-big">🚦 Otra ronda</button>
+      </div>
+
+      <h3 class="section-title">Marcador general</h3>
+      <table class="scoreboard">
+        <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th><th>Victorias</th><th>Mejor tiempo</th></tr></thead>
+        <tbody id="scoreboard-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
