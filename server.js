@@ -32,6 +32,7 @@ const GO_DELAY_MIN_MS = 300;
 const GO_DELAY_MAX_MS = 3200;
 const ROUND_TIMEOUT_MS = 6000; // tiempo maximo tras el "go" para que todos pulsen
 const ROOM_IDLE_MS = 1000 * 60 * 60 * 4; // 4h sin actividad -> se borra la sala
+const MAX_PLAYERS = 15; // maximo de jugadores por sala
 
 function randomGoDelay() {
   return GO_DELAY_MIN_MS + Math.random() * (GO_DELAY_MAX_MS - GO_DELAY_MIN_MS);
@@ -50,6 +51,7 @@ function createRoom(code) {
   const room = {
     code,
     players: new Map(), // clientId -> player
+    adminId: null, // clientId del jugador con permiso para iniciar rondas
     state: 'lobby', // lobby | arming | live | results
     round: null, // datos de la ronda en curso
     roundNumber: 0,
@@ -71,11 +73,20 @@ function getPublicPlayers(room) {
       points: p.points,
       bestMs: p.bestMs,
       roundsPlayed: p.roundsPlayed,
+      isAdmin: p.clientId === room.adminId,
     }));
 }
 
 function broadcastPlayers(room) {
-  io.to(room.code).emit('players', { players: getPublicPlayers(room), state: room.state });
+  io.to(room.code).emit('players', { players: getPublicPlayers(room), state: room.state, adminId: room.adminId });
+}
+
+/** Si el admin actual no esta conectado, cede el rol al siguiente jugador conectado. */
+function ensureAdmin(room) {
+  const current = room.adminId ? room.players.get(room.adminId) : null;
+  if (current && current.connected) return;
+  const next = [...room.players.values()].find((p) => p.connected);
+  room.adminId = next ? next.clientId : null;
 }
 
 function clearRoomTimers(room) {
@@ -235,6 +246,12 @@ io.on('connection', (socket) => {
       const safeName = (name || 'Jugador').toString().trim().slice(0, 24) || 'Jugador';
       const id = (clientId || '').toString().slice(0, 64) || `${socket.id}-${Date.now()}`;
 
+      const isNewPlayer = !room.players.has(id);
+      if (isNewPlayer && room.players.size >= MAX_PLAYERS) {
+        cb && cb({ ok: false, error: `La sala está llena (máximo ${MAX_PLAYERS} jugadores).` });
+        return;
+      }
+
       let player = room.players.get(id);
       if (!player) {
         player = {
@@ -254,6 +271,9 @@ io.on('connection', (socket) => {
         player.socketId = socket.id;
       }
 
+      if (!room.adminId) room.adminId = player.clientId; // el primero en entrar es el admin
+      ensureAdmin(room);
+
       socket.data.roomCode = room.code;
       socket.data.clientId = id;
       socket.join(room.code);
@@ -265,6 +285,8 @@ io.on('connection', (socket) => {
         you: { id: player.clientId, name: player.name },
         state: room.state,
         players: getPublicPlayers(room),
+        adminId: room.adminId,
+        maxPlayers: MAX_PLAYERS,
       });
       broadcastPlayers(room);
       io.to(room.code).emit('system', { message: `${safeName} se ha unido a la sala.` });
@@ -276,6 +298,10 @@ io.on('connection', (socket) => {
   socket.on('startRound', () => {
     const room = rooms.get(socket.data.roomCode);
     if (!room) return;
+    if (socket.data.clientId !== room.adminId) {
+      socket.emit('system', { message: 'Solo el admin de la sala puede iniciar la ronda.' });
+      return;
+    }
     touch(room);
     startRound(room);
   });
@@ -324,6 +350,12 @@ io.on('connection', (socket) => {
     const player = room.players.get(socket.data.clientId);
     if (player && player.socketId === socket.id) {
       player.connected = false;
+      const wasAdmin = room.adminId === player.clientId;
+      ensureAdmin(room);
+      if (wasAdmin && room.adminId && room.adminId !== player.clientId) {
+        const newAdmin = room.players.get(room.adminId);
+        if (newAdmin) io.to(room.code).emit('system', { message: `${newAdmin.name} es ahora el admin de la sala.` });
+      }
       broadcastPlayers(room);
     }
   });
